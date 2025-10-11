@@ -1,8 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const OpenAI = require("openai");
-const { InferenceClient } = require("@huggingface/inference") ;
-const { fal } = require ("@fal-ai/client") ;
 const fs = require("fs");
 
 
@@ -50,83 +48,22 @@ app.post("/api/generate-text", async (req, res) => {
 
 app.post("/api/generate-image", async (req, res) => {
 
-const prompt = req?.body?.prompt ||  'shot of vaporwave fashion dog in miami'
+const prompt = req?.body?.prompt ||  'Astronaut riding a horse'
 
-// //working but reached limit
-// try {
-//     const prompt = "Astronaut riding a horse";
-
-//     const response = await fetch(
-//       "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5",
-//       {
-//         headers: {
-//           Authorization: `Bearer ${process.env.HF_TOKEN}`, // 🔑 put token in .env
-//           "Content-Type": "application/json",
-//         },
-//         method: "POST",
-//         body: JSON.stringify({ inputs: prompt }),
-//       }
-//     );
-
-//     if (!response.ok) {
-//       const err = await response.json();
-//       return res.status(500).json(err);
-//     }
-
-//     // HF returns raw image bytes → convert and send as PNG
-//     const buffer = await response.arrayBuffer();
-//     res.setHeader("Content-Type", "image/png");
-//     res.send(Buffer.from(buffer));
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Image generation failed" });
-//   }
-
-// //working but reached limit
-// try {
-//     const prompt = "Astronaut riding a horse";
-
-//     const response = await fetch(`https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0`, {
-//       headers: {
-//         Authorization: `Bearer ${process.env.HF_TOKEN}`,
-//         "Content-Type": "application/json"
-//       },
-//       method: "POST",
-//       body: JSON.stringify({ inputs: prompt })
-//     });
-
-//     if (!response.ok) {
-//       const err = await response.json();
-//       return res.status(500).json(err);
-//     }
-
-//     const base64Image = Buffer.from(response, 'binary').toString ('base64')
-
-//     const resultImage =  `data:image/png;base64,${base64image}`
-
-//     res.setHeader("Content-Type", "image/png");
-//     res.send(resultImage);
-
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Image generation failed" });
-//   }
-
-
+// //working but rate limited
 try {
 
-  const form = new FormData()
-  form.append('prompt', prompt)
+    const response = await fetch(`https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0`, {
+      headers: {
+        Authorization: `Bearer ${process.env.HF_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      method: "POST",
+      body: JSON.stringify({ inputs: prompt })
+    });
 
-  fetch('https://clipdrop-api.co/text-to-image/v1', {
-  method: 'POST',
-  headers: {
-    'x-api-key': process.env.clipdrop,
-  },
-  body: form,
-  })
-  .then(response => response.arrayBuffer())
-  .then(buffer => {
+    const buffer = await response.arrayBuffer();
+
     const base64 = Buffer.from(buffer).toString("base64");
     // const dataUrl = `data:image/png;base64,${base64}`;
 
@@ -139,16 +76,48 @@ try {
     res.setHeader("Content-Type", "image/png");
     res.status(200).send(buffer1)
 
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Image generation failed" });
+  }
 
-    // res.setHeader("Content-Type", "image/PNG");
-    // res.send(base64);
 
-  })
+// try {
+
+//   const form = new FormData()
+//   form.append('prompt', prompt)
+
+//   fetch('https://clipdrop-api.co/text-to-image/v1', {
+//   method: 'POST',
+//   headers: {
+//     'x-api-key': process.env.clipdrop,
+//   },
+//   body: form,
+//   })
+//   .then(response => response.arrayBuffer())
+//   .then(buffer => {
+//     const base64 = Buffer.from(buffer).toString("base64");
+//     // const dataUrl = `data:image/png;base64,${base64}`;
+
+//     fs.writeFileSync("output.png", Buffer.from(base64, "base64"));
+//     // console.log(dataUrl); // you can send this to frontend
+
+
+//     const buffer1 = Buffer.from(base64, "base64");
+
+//     res.setHeader("Content-Type", "image/png");
+//     res.status(200).send(buffer1)
+
+
+//     // res.setHeader("Content-Type", "image/PNG");
+//     // res.send(base64);
+
+//   })
   
-} catch (error) {
-  console.log(error)
-  res.status(400).send(error)
-}
+// } catch (error) {
+//   console.log(error)
+//   res.status(400).send(error)
+// }
 
 
 
