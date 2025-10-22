@@ -10,11 +10,7 @@ app.use(express.json());
 
 const client = new OpenAI({ apiKey: process.env.api_key });
 
-// const client = new InferenceClient(process.env.HF_TOKEN);
-
-// fal.config({
-//   credentials: process.env.fal_key,
-// });
+// const client2 = new OpenAI({ apiKey: "APIkey" ,baseURL:"http://localhost:12434/engines/llama.cpp/v1"});
 
 app.get("/",(req ,res)=>{
     res.status(200).send("server is ok")
@@ -31,11 +27,16 @@ app.post("/api/generate-text", async (req, res) => {
 
     console.log("res ",response)
 
-    // const data = await response.output[0].content;
-
-    // console.log("data ",data)
-
     res.json({ result: response.output_text });
+
+    // const response = await client2.chat.completions.create({
+    // model: "ai/smollm2",
+    // messages:[{role:"user",content:prompt}]
+    // });
+
+    // console.log("res ",response)
+
+    // res.json({ result: response.choices[0].message.content });
     
   } catch (error) {
     console.log(error)
@@ -48,7 +49,7 @@ app.post("/api/generate-text", async (req, res) => {
 
 app.post("/api/generate-image", async (req, res) => {
 
-const prompt = req?.body?.prompt ||  'Astronaut riding a horse'
+const prompt = req?.body?.prompt || 'Astronaut riding a horse'
 
 // //working but rate limited
 try {
@@ -65,11 +66,8 @@ try {
     const buffer = await response.arrayBuffer();
 
     const base64 = Buffer.from(buffer).toString("base64");
-    // const dataUrl = `data:image/png;base64,${base64}`;
 
     fs.writeFileSync("output.png", Buffer.from(base64, "base64"));
-    // console.log(dataUrl); // you can send this to frontend
-
 
     const buffer1 = Buffer.from(base64, "base64");
 
@@ -78,7 +76,36 @@ try {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Image generation failed" });
+    //
+    try {
+      const form = new FormData()
+      form.append('prompt', prompt)
+
+      fetch('https://clipdrop-api.co/text-to-image/v1', {
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.clipdrop,
+      },
+      body: form,
+      })
+      .then(response => response.arrayBuffer())
+      .then(buffer => {
+        const base64 = Buffer.from(buffer).toString("base64");
+
+        fs.writeFileSync("output.png", Buffer.from(base64, "base64"));
+
+        const buffer1 = Buffer.from(base64, "base64");
+
+        res.setHeader("Content-Type", "image/png");
+        res.status(200).send(buffer1)
+      })
+      
+    } catch (error) {
+      console.log(error)
+      res.status(400).send(error)
+    }
+    //
+    // res.status(500).json({ error: "Image generation failed" });
   }
 
 
@@ -120,15 +147,10 @@ try {
 // }
 
 
-
-
-//fake image response
+// //fake image response
 // try {
-
-//   const prompt = req?.body?.prompt 
-
+//   const prompt = req?.body?.prompt
 //   if(prompt){
-
 //     setTimeout(()=>{
 //       fs.readFile("./output.png",(err ,data)=>{
 //       if(err){
@@ -142,17 +164,13 @@ try {
 //       }
 //     })
 //     },4000)
-
 //   }
 //   else{
 //     throw new Error("something wrong with prompt");
 //   }
-  
 // } catch (error) {
-
 //   console.log("error ",error)
 //   res.send({status:"error" , message: error})
-  
 // }
 
 });
