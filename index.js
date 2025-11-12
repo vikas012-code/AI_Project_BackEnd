@@ -2,13 +2,16 @@ const express = require("express");
 const cors = require("cors");
 const OpenAI = require("openai");
 const fs = require("fs");
-
+const { InferenceClient } =require("@huggingface/inference");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const client = new OpenAI({ apiKey: process.env.api_key });
+
+const clientHF = new InferenceClient(process.env.HF_TOKEN);
+
 
 // const client2 = new OpenAI({ apiKey: "APIkey" ,baseURL:"http://localhost:12434/engines/llama.cpp/v1"});
 
@@ -44,26 +47,23 @@ app.post("/api/generate-text", async (req, res) => {
   }
 });
 
-
-
-
 app.post("/api/generate-image", async (req, res) => {
 
 const prompt = req?.body?.prompt || 'Astronaut riding a horse'
 
+console.log("image- ",prompt)
+
 // //working but rate limited
 try {
 
-    const response = await fetch(`https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0`, {
-      headers: {
-        Authorization: `Bearer ${process.env.HF_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      method: "POST",
-      body: JSON.stringify({ inputs: prompt })
+    const imageBlob = await clientHF.textToImage({
+      model: "stabilityai/stable-diffusion-xl-base-1.0",
+      inputs:
+        prompt,
     });
 
-    const buffer = await response.arrayBuffer();
+    if(imageBlob){
+    const buffer = await imageBlob.arrayBuffer();
 
     const base64 = Buffer.from(buffer).toString("base64");
 
@@ -73,11 +73,10 @@ try {
 
     res.setHeader("Content-Type", "image/png");
     res.status(200).send(buffer1)
+    }
+    else{
+      console.error("error in HF- ",imageBlob)
 
-  } catch (err) {
-    console.error(err);
-    //
-    try {
       const form = new FormData()
       form.append('prompt', prompt)
 
@@ -99,15 +98,14 @@ try {
         res.setHeader("Content-Type", "image/png");
         res.status(200).send(buffer1)
       })
-      
-    } catch (error) {
-      console.log(error)
-      res.status(400).send(error)
+      .catch((err)=> console.error(err))
     }
+
+  } catch (err) {
+    console.error(err);
     //
     // res.status(500).json({ error: "Image generation failed" });
   }
-
 
 // try {
 
