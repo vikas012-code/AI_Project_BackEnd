@@ -25,12 +25,8 @@ app.get("/wake",(req ,res)=>{
     setTimeout(() => {
         console.log("after 60 seconds");
         fetch("https://service-runner.onrender.com")
-        .then(async (res)=>{
-            const data = await res.json();
-            console.log(data);
-        }).catch(async (err)=>{
-            console.log("error ",{err});
-        })
+        .then((res)=>console.log("res-> ",res);)
+        .catch((err)=> console.log("error ",{err});)
     }, 60000);
 })
 
