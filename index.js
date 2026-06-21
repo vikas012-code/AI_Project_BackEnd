@@ -19,6 +19,21 @@ app.get("/",(req ,res)=>{
     res.status(200).send("server is ok")
 })
 
+app.get("/wake",(req ,res)=>{
+    res.status(200).send("server is ok")
+
+    setTimeout(() => {
+        console.log("after 60 seconds");
+        fetch("https://service-runner.onrender.com")
+        .then(async (res)=>{
+            const data = await res.json();
+            console.log(data);
+        }).catch(async (err)=>{
+            console.log("error ",{err});
+        })
+    }, 60000);
+})
+
 app.post("/api/generate-text", async (req, res) => {
   const { prompt } = req.body;
   console.log("prompt ",prompt)
