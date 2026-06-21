@@ -22,11 +22,11 @@ app.get("/",(req ,res)=>{
 app.get("/wake",(req ,res)=>{
     res.status(200).send("server is ok")
 
-    setTimeout(() => {
+setTimeout(() => {
         console.log("after 60 seconds");
         fetch("https://service-runner.onrender.com")
-        .then((res)=>console.log("res-> ",res);)
-        .catch((err)=> console.log("error ",{err});)
+        .then((res) => console.log("res-> ",res.statusText))
+        .catch((err)=> console.log("catch error ",{err}))
     }, 60000);
 })
 
