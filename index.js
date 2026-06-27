@@ -20,6 +20,7 @@ app.get("/",(req ,res)=>{
 })
 
 app.get("/wake",(req ,res)=>{
+    console.log("wake...");
     res.status(200).send("server is ok")
 
 setTimeout(() => {
