@@ -24,7 +24,7 @@ app.get("/wake",(req ,res)=>{
 
 setTimeout(() => {
         console.log("after 60 seconds");
-        fetch("https://service-runner.onrender.com")
+        fetch("https://service-runner.onrender.com/wake")
         .then((res) => console.log("res-> ",res.statusText))
         .catch((err)=> console.log("catch error ",{err}))
     }, 60000);
